@@ -1,0 +1,10 @@
+.top, .notesContainer {
+  margin: 5px 10px;
+}
+.top, .notesTop {
+  height: 40px;
+  line-height: 40px;
+  background: #EFEFEF;
+  color: #FFF;
+}
+
