@@ -1,0 +1,62 @@
+{
+  "name": "Notes",
+  "description": "Notes",
+  "launch_path": "/",
+  "developer": {
+    "name": "Code Party Cluj",
+    "url": "https://github.com/mozilla-b2g/gaia"
+  },
+  "permissions": [
+
+  ],
+  "locales": {
+    "ar": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "de": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "el": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "en-US": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "es": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "fr": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "it": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "pt-BR": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "ru": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "tr": {
+      "name": "Notes",
+      "description": "Notes"
+    },
+    "zh-TW": {
+      "name": "Notes",
+      "description": "Notes"
+    }
+  },
+  "default_locale": "en-US",
+  "icons": {
+    "128": "/style/icons/Blank.png"
+  }
+}
