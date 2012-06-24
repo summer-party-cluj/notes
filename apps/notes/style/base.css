@@ -1,10 +1,119 @@
-.top, .notesContainer {
-  margin: 5px 10px;
+html, body {
+	font-family: "Open Sans",sans-serif;
+	font-size: 3mozmm;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	background: -moz-radial-gradient(black 15%, transparent 16%) 0 0,   -moz-radial-gradient(black 15%, transparent 16%) 8px 8px,   -moz-radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,   -moz-radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
+	background-color: #282828;
+	background-size: 16px 16px;
 }
-.top, .notesTop {
-  height: 40px;
-  line-height: 40px;
-  background: #EFEFEF;
-  color: #FFF;
+h1 {
+	font-family: "Open Sans",sans-serif;
+	font-size: 1.3em;
+	font-weight: bold;
+	line-height: 64px;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	text-shadow: 0 1px 0 #305B5E;
 }
-
+.left {
+	float: left;
+}
+.right {
+	float: right;
+}
+.hide {
+	display: none;
+}
+.notesTop {
+	background-color: #FFFFFF;
+	background-image: -moz-linear-gradient(#4D555F, #292E33);
+	border-bottom: 2px solid #A3A3A3;
+	color: #FFFFFF;
+	height: 62px;
+	line-height: 62px;
+	position: relative;
+	text-align: center;
+}
+#addNoteContainer {
+	border: 1px solid #EFEFEF;
+	width: 100%;
+	resize: none;
+	padding: 2px 5px;
+	background-color: white;
+	/*background-image: -webkit-linear-gradient(#EEE .06em, transparent .06em);*/
+	/*background-size: 100% 14px;*/
+	line-height: 14px;
+	min-height: 52px;
+}
+a.button, span.button {
+	background-image: -moz-linear-gradient(#5C636C, #3D434A);
+	border: 1px solid #282D32;
+	border-radius: 7px 7px 7px 7px;
+	color: #C7D8E4;
+	cursor: pointer;
+	display: inline-block;
+	line-height: 22px;
+	margin: 4px;
+	min-width: 6mozmm;
+	padding: 12px;
+	text-align: center;
+	text-decoration: none;
+	text-shadow: 0 1px 0 #305B5E;
+}
+a.button.right {
+	position: absolute;
+	right: 3px;
+	top: 3px;
+}
+a.plus {
+  font-size: 1.7em;
+}
+#updateNoteContainer {
+	display: none;
+}
+.insertButton {
+	font-weight: bold;
+	cursor: pointer;
+}
+.notesContainer {
+  margin: 5px 0 0 0;
+  position: relative;
+  background-color: #F5F5F5;
+}
+.noteRow {
+  padding: 5px 80px 5px 10px;
+  margin: 0;
+	background-color: #F5F5F5;
+	border-bottom: 1px solid #C3C9CB;
+	color: #555555;
+	height: 74px;
+	position: relative;
+}
+.noteRow span {
+	overflow: hidden;
+	/*overflow-y: auto;*/
+	height: 74px;
+	display: block;
+}
+.editNote, .deleteNote {
+	position: absolute;
+	top: 10px;
+	right: 50px;
+	width: 32px;
+	height: 32px;
+	text-indent: -99999px;
+  cursor: pointer;
+}
+.editNote {
+  background-image: url(icons/edit.png);
+}
+.deleteNote {
+  background-image: url(icons/trash.png);	
+	right: 10px;
+}
+.clear {
+	clear:both;
+}

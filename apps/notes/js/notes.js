@@ -1,162 +1,12 @@
 
 /**
- * @description Notes Database management
- * @returns
- */
-var NotesDb = function () {
-  "use strict";
-  var myself = this,
-    mDb,
-    mDbRef,
-    mAvailable = false,
-    mDbReady = false;
-  //NotesDb will be singleton
-  if (NotesDb.myInstance) {
-    return NotesDb.myInstance;
-  }
-  NotesDb.myInstance = myself;
-  /**
-   * @description On request failure
-   */
-  function onRequestFailure(e) {
-    console.log(e);
-  }
-  /**
-   * @description Get all notes
-   */
-  myself.getAllItems = function(responseCb) {
-    var todos,
-      trans,
-      store,
-      keyRange,
-      cursorRequest,
-      response = [];
-    trans = mDbRef.transaction(["note"], IDBTransaction.READ_WRITE);
-    store = trans.objectStore("note");
-    // Get everything in the store;
-    keyRange = IDBKeyRange.lowerBound(0);
-    cursorRequest = store.openCursor(keyRange);
-    cursorRequest.onsuccess = function(e) {
-      var result = e.target.result;
-      if (!!result === false) {
-        responseCb(response);
-        return;
-      }
-      result.continue();
-    };
-    cursorRequest.onerror = onRequestFailure;
-  };
-  /**
-   * @description Delete node
-   */
-  myself.deleteNote = function(id, deleteNoteCb) {
-    var trans,
-      store,
-      data,
-      request;
-    trans = mDbRef.transaction(["note"], IDBTransaction.READ_WRITE);
-    store = trans.objectStore("note");
-    request = store.delete(id);
-    request.onsuccess = function(e) {
-      deleteNoteCb(true, id);
-    };
-    request.onerror = function(e) {
-      deleteNoteCb(false, id);
-    };
-  };
-  /**
-   * @Description Update note
-   */
-  myself.updateNote = function (noteData, updateNoteCb) {
-    //TODO
-    updateNoteCb(true, noteData);
-  };
-  /**
-   * @description Add new note
-   */
-  myself.addNote = function (noteText, addNoteCb) {
-    var trans,
-      store,
-      data,
-      request;
-    trans = mDbRef.transaction(["note"], IDBTransaction.READ_WRITE);
-    store = trans.objectStore("note");
-    data = {
-      "text": noteText,
-      "timeStamp": (new Date()).getTime()
-    };
-    request = store.put(data);
-    request.onsuccess = function(e) {
-      addNoteCb(true, data);
-    };
-    request.onerror = function(e) {
-      addNoteCb(false, data);
-    };
-  };
-  /**
-   * @description When database open was with success
-   */
-  function onSuccessOpen(e) {
-    var v = "1.0",
-      setVersionRequest;
-    mDbRef = e.target.result;
-    // We can only create Object stores in a setVersion transaction;
-    if (v !== mDbRef.version) {
-      setVersionRequest = mDbRef.setVersion(v);
-      // onsuccess is the only place we can create Object Stores
-      setVersionRequest.onerror = onRequestFailure;
-      setVersionRequest.onsuccess = function (e) {
-        if (mDbRef.objectStoreNames.contains("note")) {
-          mDbRef.deleteObjectStore("note");
-        }
-        var store = mDbRef.createObjectStore("note",
-          {keyPath: "timeStamp"});
-        mDbReady = true;
-      };
-    } else {
-      mDbReady = true;
-    }
-  }
-  /**
-   * @description Initialize
-   */
-  function init() {
-    var request;
-    mDb = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB;
-    if ('webkitIndexedDB' in window) {
-      window.IDBTransaction = window.webkitIDBTransaction;
-      window.IDBKeyRange = window.webkitIDBKeyRange;
-    }
-    if (mDb) {
-      mAvailable = true;
-      request = mDb.open("NotesApp");
-      request.onsuccess = onSuccessOpen;
-      request.onfailure = function (e) {
-  	    mAvailable = false;
-  	    mDbReady = true;
-      	onRequestFailure(e);
-      };
-    }
-  }
-  myself.getAvailable = function () {
-    return mAvailable;
-  };
-  myself.getDbReady = function () {
-	  return mDbReady;
-  };
-  myself.getNotes = function () {
-  };
-  init();
-};
-/**
  * @description Note application class
  * @author Paul Comanici <darkyndy@gmail.com>
  */
 var NotesApp = function () {
   "use strict";
   var myself = this,
-    mDb,
-    mDbAvailable = false,
+    notesDb,
     mNotes = [],
     mRowNr = 0,
     mInEditRow = 0;
@@ -165,13 +15,6 @@ var NotesApp = function () {
     return NotesApp.myInstance;
   }
   NotesApp.myInstance = myself;
-  /**
-   * @description Update note text
-   */
-  function updateNoteHtml(noteData) {
-    document.querySelector("#noteRow" + mRowNr + " span").innerHTML = noteData.text;
-    document.querySelector("#noteTimestamp" + mRowNr).value = noteData.timeStamp;
-  }
   /**
    * @description Build html for note
    */
@@ -182,7 +25,9 @@ var NotesApp = function () {
       deleteEl,
       timeEl,
       noteEl,
-      noteRowEl;
+      noteTextEl,
+      noteRowEl,
+      noteText;
     mRowNr = mRowNr + 1;
     notesContainer = document.getElementById("notesContainer");
     doc = notesContainer.ownerDocument;
@@ -190,11 +35,19 @@ var NotesApp = function () {
     noteRowEl = doc.createElement("DIV");
     noteRowEl.setAttribute("id", "noteRow" + mRowNr);
     noteRowEl.setAttribute("class", "noteRow");
+    noteRowEl.setAttribute("data-id", noteData.id);
+    //text
     noteEl = doc.createElement("SPAN");
     noteRowEl.appendChild(noteEl);
-    noteEl.innerHTML = noteData.text;
+    noteText = noteData.text;
+    noteEl.innerHTML = getNoteTextForView(noteText);
+    //write initial text in textarea
+    noteTextEl = doc.createElement("TEXTAREA");
+    noteTextEl.setAttribute("id", "noteText" + mRowNr);
+    noteTextEl.setAttribute("class", "hide");
+    noteRowEl.appendChild(noteTextEl);
+    noteTextEl.value = noteText;
     //time
-    //noteData
     timeEl = doc.createElement("INPUT");
     timeEl.setAttribute("id", "noteTimestamp" + mRowNr);
     timeEl.setAttribute("type", "hidden");
@@ -212,36 +65,40 @@ var NotesApp = function () {
     deleteEl.setAttribute("class", "deleteNote");
     noteRowEl.appendChild(deleteEl);
     deleteEl.innerHTML = "Delete";
-    notesContainer.appendChild(noteRowEl);
+    notesContainer.insertBefore(noteRowEl, notesContainer.childNodes[0]);
     //delegate
     delegateForNoteRow(mRowNr);
   }
   /**
    * @description Get notes callback
    */
-  function getNotesResponseCb(notes) {
+  function onLoadCb(notes) {
     var notesLength = 0,
-      i = 0;
+      i = 0,
+      j = 0,
+      sortedNotesIndexes = [],
+      sortedTimes = [],
+      maxTime = 0,
+      tempTime;
     notesLength = notes.length;
-    console.log(notes);
     if (notesLength === 0) {
       addNoteButtonClick();
     } else {
       for (i = 0; i < notesLength; i = i +1) {
-        buildNoteHtml(notes[i]);
+        tempTime = notes[i].time;
+        sortedTimes.push(tempTime);
+      }
+      //sortedTimes.sort(function(a,b){return a-b});
+      sortedTimes.sort();
+      for (i = 0; i < notesLength; i = i +1) {
+        for (j = 0; j < notesLength; j = j +1) {
+          tempTime = notes[j].time;
+          if (tempTime === sortedTimes[i]) {
+            buildNoteHtml(notes[j]);
+          }
+        }
       }
     }
-  }
-  /**
-   * @description Get all notes
-   */
-  function getNotes() {
-  	var dbReady = mDb.getDbReady();
-  	if (dbReady) {
-  	  mDb.getAllItems(getNotesResponseCb);
-  	} else {
-  	  setTimeout(function () {getNotes(); }, 100);
-  	}
   }
   /**
    * @description Function executed when you click on edit for a note
@@ -249,23 +106,35 @@ var NotesApp = function () {
   function editNoteButtonClick(noteRow) {
     var noteText;
     mInEditRow = noteRow;
-    noteText = document.querySelector("#noteRow" + noteRow + " span").innerHTML;
+    noteText = document.querySelector("#noteText" + noteRow).value;
     document.getElementById("addNoteContainer").value = noteText;
     addNoteButtonClick();
+  }
+  /**
+   * 
+   * @param On delete callback
+   */
+  function onDeleteCb(noteId) {
+    var noteRowEl;
+    noteRowEl = document.querySelector("[data-id='" + noteId + "']");
+    noteRowEl.parentNode.removeChild(noteRowEl);
   }
   /**
    * @description Function executed when you click on delete for a note
    */
   function deleteNoteButtonClick(noteRow) {
     var confirmed,
-      noteRowEl;
+      noteRowEl,
+      noteId;
     confirmed = confirm("Are you sure you want to delete this note?");
     if (confirmed) {
       if (mInEditRow === noteRow) {
         cancelInsertNoteClick(true);
       }
       noteRowEl = document.getElementById("noteRow" + noteRow);
-      noteRowEl.parentNode.removeChild(noteRowEl);
+      noteId = noteRowEl.getAttribute("data-id");
+      noteId = parseInt(noteId, 10);
+      notesDb.delete(noteId);
     }
   }
   /**
@@ -277,39 +146,64 @@ var NotesApp = function () {
     document.getElementById("noteRowDelete" + noteRow).addEventListener("click", function() {deleteNoteButtonClick(noteRow); }, false);
   }
   /**
+   * @description Get note text for view (HTML)
+   * @param noteText
+   * @returns
+   */
+  function getNoteTextForView(noteText) {
+    noteText = noteText.replace(/\n/gmi, "<br>");
+    return noteText;
+  }
+  /**
+   * @description Update note
+   * @param note
+   * @returns
+   */
+  function updateNoteHtml(note) {
+    var noteText,
+      noteRowEl;
+    noteText = note.text;
+    document.querySelector("#noteRow" + mInEditRow + " span").innerHTML = getNoteTextForView(noteText);
+    document.getElementById("noteText" + mInEditRow).value = noteText;
+    noteRowEl = document.getElementById("noteRow" + mInEditRow);
+    noteRowEl.parentNode.insertBefore(noteRowEl, notesContainer.childNodes[0]);
+  }
+  /**
    * @description Insert/Update note
    */
-  function changeNote(successFlag, response, asUpdate) {
+  function changeNote(note, successFlag, asUpdate) {
     var noteTextEl;
     successFlag = successFlag || false;
     asUpdate = asUpdate || false;
     if (successFlag) {
+      noteTextEl = document.getElementById("addNoteContainer");
+      noteTextEl.value = "";
+      toggleUpdateBlock();
       if (asUpdate) {
-        updateNoteHtml(response);
+        updateNoteHtml(note);
       } else {
-        buildNoteHtml(response);
+        buildNoteHtml(note);
       }
       mInEditRow = 0;
-      noteTextEl = document.getElementById("addNoteContainer");
-      noteTextEl.style.display = "none";
-      noteTextEl.value = "";
-      document.getElementById("insertNote").style.display = "none";
-      document.getElementById("cancelInsertNote").style.display = "none";
     } else {
-      alert(response);
+      alert(note);
     }
-  }
-  /**
-   * @description Update note callback
-   */
-  function updateNoteCb(successFlag, response) {
-    changeNote(successFlag, response, true);
   }
   /**
    * @description Insert note callback
    */
-  function insertNoteCb(successFlag, response) {
-    changeNote(successFlag, response, false);
+  function onPutCb(note, response, asUpdate) {
+    var successFlag = false;
+    asUpdate = asUpdate || false;
+    if (response && response.type) {
+      if (response.type === "success") {
+        successFlag = true;
+      }
+    }
+    if (!successFlag) {
+      note = response;
+    }
+    changeNote(note, successFlag, asUpdate);
   }
   /**
    * @description Function executed when insert note button was clicked
@@ -317,8 +211,9 @@ var NotesApp = function () {
   function insertNoteButtonClick() {
     var noteTextEl,
       noteText,
-      noteTimestamp,
-      noteTextLength = 0;
+      noteTextLength = 0,
+      noteId = 0,
+      noteItem = {};
     noteTextEl = document.getElementById("addNoteContainer");
     noteText = noteTextEl.value;
     //TODO: trim it
@@ -328,16 +223,31 @@ var NotesApp = function () {
     } else if (noteTextLength > 255) {
       alert("You must write at most 255 characters");
     } else {
+      noteItem.text = noteText;
+      noteItem.time = (new Date()).getTime();
       if (mInEditRow > 0) {
         //update
-        noteTimestamp = document.getElementById("noteTimestamp" + mInEditRow).value;
-        noteTimestamp = parseInt(noteTimestamp, 10);
-        mDb.updateNote({text: noteText, timeStamp: noteTimestamp}, updateNoteCb);
+        noteId = document.getElementById("noteRow" + mInEditRow).getAttribute("data-id");
+        noteId = parseInt(noteId, 10);
+        noteItem.id = noteId;
+        notesDb.update(noteItem);
       } else {
         //insert
-        mDb.addNote(noteText, insertNoteCb);
+        notesDb.put(noteItem);
       }
     }
+  }
+  /**
+   * @description Toggle update block
+   * @returns
+   */
+  function toggleUpdateBlock(toggleFlag) {
+    var displayStyle = "none";
+    toggleFlag = toggleFlag || false;
+    if (toggleFlag) {
+      displayStyle = "block";
+    }
+    document.getElementById("updateNoteContainer").style.display = displayStyle;
   }
   /**
    * @description Function executed when cancel add note button was clicked
@@ -350,9 +260,7 @@ var NotesApp = function () {
       addNoteContainerEl.value = "";
     }
     mInEditRow = 0;
-    addNoteContainerEl.style.display = "none";
-    document.getElementById("insertNote").style.display = "none";
-    document.getElementById("cancelInsertNote").style.display = "none";
+    toggleUpdateBlock(false);
   }
   /**
    * @description Function executed when add note button was clicked
@@ -365,9 +273,8 @@ var NotesApp = function () {
       insertText = "Edit";
     }
     insertNodeEl.innerHTML = insertText;
-    document.getElementById("addNoteContainer").style.display = "block";
-    insertNodeEl.style.display = "block";
-    document.getElementById("cancelInsertNote").style.display = "block";
+    toggleUpdateBlock(true);
+    document.getElementById("addNoteContainer").focus();
   }
   /**
    * @description Attach events
@@ -384,12 +291,9 @@ var NotesApp = function () {
    * @description Initialize
    */
   function init() {
-    mDb = new NotesDb();
-    mDbAvailable = mDb.getAvailable();
+    notesDb = new NotesDb(onLoadCb, onPutCb, onDeleteCb);
     delegate();
-    if (mDbAvailable) {
-      getNotes();
-    }
+    notesDb.load();
   }
   init();
 };
