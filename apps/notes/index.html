@@ -5,16 +5,24 @@
     <meta http-equiv="pragma" content="no-cache">
     <title>Notes</title>
     <link rel="stylesheet" type="text/css" href="style/base.css">
+    <script type="text/javascript" src="js/db.js"></script>
+    <script type="text/javascript" src="js/notesDb.js"></script>
     <script type="text/javascript" src="js/notes.js"></script>
   </head>
 
   <body>
-    <div id="top" class="top">
-      <span id="addNote">add</span>
+    <div id="notesTop" class="notesTop">
+			<h1 class="label" id="notes-title">Notes</h1>
+			<a class="right button plus" href="#task" id="addNote" title="Add">+</a>
     </div>
-    <textarea id="addNoteContainer"></textarea>
-    <div id="insertNote" class="insertButton">Insert</div>
-    <div id="cancelInsertNote" class="insertButton">Cancel</div>
+    <div class="clear"></div>
+    <div id="updateNoteContainer">
+	    <textarea id="addNoteContainer"></textarea>
+	    <div class="clear"></div>
+	    <span id="insertNote" class="insertButton button left">Insert</span>
+	    <span id="cancelInsertNote" class="insertButton button right">Cancel</span>
+    </div>
+    <div class="clear"></div>
     <div id="notesContainer" class="notesContainer"></div>
   </body>
 </html>
